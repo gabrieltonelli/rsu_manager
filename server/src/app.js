@@ -41,8 +41,16 @@ app.use(
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 
+// Normalizar prefijo serverless de Netlify si llega directo al app
+app.use((req, res, next) => {
+  if (req.url.startsWith('/.netlify/functions/api')) {
+    req.url = req.url.replace('/.netlify/functions/api', '/api') || '/';
+  }
+  next();
+});
+
 // Healthcheck
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/.netlify/functions/api/health'], (req, res) => {
   res.json({
     status: 'ok',
     service: 'rsu-manager-server',
@@ -53,14 +61,25 @@ app.get('/api/health', (req, res) => {
 
 // Módulos de la API REST
 app.use('/api/auth', authRoutes);
+app.use('/.netlify/functions/api/auth', authRoutes);
+
 app.use('/api/admin', adminRoutes);
+app.use('/.netlify/functions/api/admin', adminRoutes);
+
 app.use('/api/recolector', recolectorRoutes);
+app.use('/.netlify/functions/api/recolector', recolectorRoutes);
+
 app.use('/api/volquetes', volquetesRoutes);
+app.use('/.netlify/functions/api/volquetes', volquetesRoutes);
+
 app.use('/api/cliente', clienteRoutes);
+app.use('/.netlify/functions/api/cliente', clienteRoutes);
+
 app.use('/api/trazabilidad', trazabilidadRoutes);
+app.use('/.netlify/functions/api/trazabilidad', trazabilidadRoutes);
 
 // Manejador 404 para rutas API inexistentes
-app.use('/api/*', (req, res) => {
+app.use(['/api/*', '/.netlify/functions/api/*'], (req, res) => {
   res.status(404).json({ error: `Ruta API no encontrada: ${req.method} ${req.originalUrl}` });
 });
 

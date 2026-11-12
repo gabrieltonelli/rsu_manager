@@ -12,6 +12,16 @@
   --radius: 12px;
 }
 
+/* Ocultar badge inyectado por Netlify o extensiones */
+#nl-badge,
+[id*="nl-badge"],
+.netlify-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 * {
   box-sizing: border-box;
 }
