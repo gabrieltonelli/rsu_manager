@@ -84,8 +84,10 @@ router.post('/publico/solicitar', async (req, res) => {
       direccion,
       telefono_contacto,
       nombre_solicitante = 'Solicitante Web',
-      accion = 'solicitar_nuevo', // 'solicitar_nuevo' | 'solicitar_cambio' | 'finalizar_gestion'
+      accion = 'solicitar_nuevo', // 'solicitar_nuevo' | 'solicitar_cambio' | 'finalizar_gestion' | 'otros'
       notas = '',
+      latitud = null,
+      longitud = null,
     } = req.body;
 
     if (!direccion || !telefono_contacto) {
@@ -119,7 +121,15 @@ router.post('/publico/solicitar', async (req, res) => {
 
         if (!activa) {
           // Crear nueva solicitud de volquete
-          const geo = await geocodeAddress(direccion);
+          let finalLat = latitud != null ? Number(latitud) : null;
+          let finalLng = longitud != null ? Number(longitud) : null;
+
+          if (finalLat == null || finalLng == null) {
+            const geo = await geocodeAddress(direccion);
+            finalLat = geo?.latitud || -34.6037;
+            finalLng = geo?.longitud || -58.3816;
+          }
+
           const codigo = `VOL-${Math.floor(1000 + Math.random() * 9000)}`;
 
           const ins = await tx.query(
@@ -139,8 +149,8 @@ router.post('/publico/solicitar', async (req, res) => {
               codigo,
               direccion.trim(),
               norm,
-              geo?.latitud || -34.6037,
-              geo?.longitud || -58.3816,
+              finalLat,
+              finalLng,
               telefono_contacto.trim(),
               nombre_solicitante.trim(),
               tarifaBase,
@@ -153,6 +163,11 @@ router.post('/publico/solicitar', async (req, res) => {
             `INSERT INTO public.volquetes_movimientos (
               gestion_id, tipo_movimiento, origen, costo_movimiento, notas
             ) VALUES ($1, 'solicitud_inicial', 'publico', $2, $3)`,
+            [nueva.id, tarifaBase, `Solicitud pública inicial (${accion}). Tel: ${telefono_contacto}. ${notas}`.trim()]
+          );
+
+          return { gestion: nueva, operacion: 'creada' };
+        } else {
             [nueva.id, tarifaBase, `Solicitud pública inicial. Tel: ${telefono_contacto}. ${notas}`.trim()]
           );
 
