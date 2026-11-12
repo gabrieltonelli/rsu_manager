@@ -160,9 +160,8 @@ export default function PublicVolquetesPage() {
           <div className="wizard-progress-bar">
             <div className="wizard-step-indicator">
               <div
-                className={`wizard-step-circle ${
-                  paso === 1 ? 'active' : paso > 1 ? 'completed' : ''
-                }`}
+                className={`wizard-step-circle ${paso === 1 ? 'active' : paso > 1 ? 'completed' : ''
+                  }`}
               >
                 1
               </div>
@@ -170,9 +169,8 @@ export default function PublicVolquetesPage() {
             </div>
             <div className="wizard-step-indicator">
               <div
-                className={`wizard-step-circle ${
-                  paso === 2 ? 'active' : paso > 2 ? 'completed' : ''
-                }`}
+                className={`wizard-step-circle ${paso === 2 ? 'active' : paso > 2 ? 'completed' : ''
+                  }`}
               >
                 2
               </div>
@@ -180,9 +178,8 @@ export default function PublicVolquetesPage() {
             </div>
             <div className="wizard-step-indicator">
               <div
-                className={`wizard-step-circle ${
-                  paso === 3 ? 'active' : paso > 3 ? 'completed' : ''
-                }`}
+                className={`wizard-step-circle ${paso === 3 ? 'active' : paso > 3 ? 'completed' : ''
+                  }`}
               >
                 3
               </div>
@@ -190,9 +187,8 @@ export default function PublicVolquetesPage() {
             </div>
             <div className="wizard-step-indicator">
               <div
-                className={`wizard-step-circle ${
-                  paso === 4 ? 'active' : paso > 4 ? 'completed' : ''
-                }`}
+                className={`wizard-step-circle ${paso === 4 ? 'active' : paso > 4 ? 'completed' : ''
+                  }`}
               >
                 4
               </div>
@@ -640,10 +636,10 @@ export default function PublicVolquetesPage() {
                 {accion === 'solicitar_nuevo'
                   ? 'Nuevo Volquete'
                   : accion === 'solicitar_cambio'
-                  ? 'Reemplazo / Cambio'
-                  : accion === 'finalizar_gestion'
-                  ? 'Retiro Definitivo'
-                  : 'Consulta / Otros'}
+                    ? 'Reemplazo / Cambio'
+                    : accion === 'finalizar_gestion'
+                      ? 'Retiro Definitivo'
+                      : 'Consulta / Otros'}
               </div>
               <div style={{ marginBottom: '6px' }}>
                 <strong>Teléfono:</strong> {telefono}
@@ -651,12 +647,11 @@ export default function PublicVolquetesPage() {
               <div>
                 <strong>Ubicación:</strong>{' '}
                 {calleNumero.trim()
-                  ? `${calleNumero.trim()} (${
-                      usarOtraCiudad ? otraCiudad : ciudadSeleccionada.nombre
-                    })`
+                  ? `${calleNumero.trim()} (${usarOtraCiudad ? otraCiudad : ciudadSeleccionada.nombre
+                  })`
                   : usarOtraCiudad
-                  ? otraCiudad
-                  : ciudadSeleccionada.nombre}
+                    ? otraCiudad
+                    : ciudadSeleccionada.nombre}
               </div>
             </div>
 

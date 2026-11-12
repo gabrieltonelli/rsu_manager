@@ -168,11 +168,6 @@ router.post('/publico/solicitar', async (req, res) => {
 
           return { gestion: nueva, operacion: 'creada' };
         } else {
-            [nueva.id, tarifaBase, `Solicitud pública inicial. Tel: ${telefono_contacto}. ${notas}`.trim()]
-          );
-
-          return { gestion: nueva, operacion: 'creada' };
-        } else {
           // Ya existe gestión activa: procesar cambio o retiro final
           const esCambio = accion === 'solicitar_cambio';
           const nuevoEstado = esCambio ? 'cambio_solicitado' : 'retiro_solicitado';
