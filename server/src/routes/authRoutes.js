@@ -357,6 +357,139 @@ router.post('/google-register-request', async (req, res) => {
 });
 
 /**
+ * POST /api/auth/recuperar-password
+ * Solicita restablecimiento de contraseña. Por seguridad de enumeración,
+ * siempre responde con mensaje de confirmación independientemente de si el correo existe o no.
+ * Si Supabase Auth está disponible, dispara resetPasswordForEmail.
+ */
+router.post('/recuperar-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Debe ingresar un correo electrónico.' });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    // Intentar disparar correo vía Supabase Auth si está configurado
+    if (supabasePublic) {
+      try {
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        await supabasePublic.auth.resetPasswordForEmail(normalizedEmail, {
+          redirectTo: `${clientUrl}/reset-password`,
+        });
+      } catch (supaErr) {
+        // Silenciar error externo para evitar enumeración y registrar
+        console.warn('[Recuperar Password] Supabase reset request:', supaErr?.message);
+      }
+    }
+
+    // Registrar en auditoría
+    await withAudit(
+      {
+        email: normalizedEmail,
+        rol: 'visitante',
+        ip: req.ip,
+        actionDesc: `Solicitud de restablecimiento de contraseña para ${normalizedEmail}`,
+      },
+      async () => {}
+    );
+
+    res.json({
+      message: 'En caso de existir en el sistema, recibirá un correo con las instrucciones para restablecer su contraseña.',
+    });
+  } catch (err) {
+    console.error('[POST /api/auth/recuperar-password Error]:', err);
+    res.json({
+      message: 'En caso de existir en el sistema, recibirá un correo con las instrucciones para restablecer su contraseña.',
+    });
+  }
+});
+
+/**
+ * POST /api/auth/registro
+ * Registro básico de nuevo usuario con contraseña o datos iniciales.
+ * La cuenta queda creada con el rol 'pendiente_aprobacion' sujeta a revisión del Administrador.
+ */
+router.post('/registro', async (req, res) => {
+  try {
+    const { email, password, nombre_completo, telefono } = req.body;
+    if (!email || !password || !nombre_completo) {
+      return res.status(400).json({ error: 'Complete todos los campos obligatorios (nombre, correo y contraseña).' });
+    }
+
+    if (String(password).length < 6) {
+      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    // Verificar si ya existe en PostgreSQL
+    const existing = await query(`SELECT id FROM public.usuarios WHERE LOWER(email) = $1 LIMIT 1`, [normalizedEmail]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Ya existe una cuenta registrada con este correo electrónico.' });
+    }
+
+    let supabaseUid = null;
+    // Crear en Supabase Auth si está disponible
+    if (supabaseAdmin) {
+      try {
+        const { data: supaUser, error: supaErr } = await supabaseAdmin.auth.admin.createUser({
+          email: normalizedEmail,
+          password: String(password),
+          email_confirm: true,
+          user_metadata: { nombre_completo: String(nombre_completo).trim() },
+        });
+        if (!supaErr && supaUser?.user) {
+          supabaseUid = supaUser.user.id;
+        }
+      } catch (err) {
+        console.warn('[Registro] Advertencia al sincronizar usuario con Supabase Auth:', err.message);
+      }
+    }
+
+    const hash = await bcrypt.hash(String(password), 10);
+
+    const newUser = await withAudit(
+      {
+        email: normalizedEmail,
+        rol: 'pendiente_aprobacion',
+        ip: req.ip,
+        actionDesc: 'Solicitud de auto-registro sujeta a aprobación de administrador',
+      },
+      async (tx) => {
+        const { inquilinoId, pendingRolId } = await getDefaultTenantAndPendingRole(tx);
+        const ins = await tx.query(
+          `INSERT INTO public.usuarios (
+            inquilino_id, supabase_uid, email, password_hash, nombre_completo, telefono,
+            proveedor_auth, rol_id, habilitado, conectado, ultima_conexion_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, 'email', $7, TRUE, FALSE, NOW())
+          RETURNING id, email, nombre_completo, rol_id`,
+          [
+            inquilinoId,
+            supabaseUid,
+            normalizedEmail,
+            hash,
+            String(nombre_completo).trim(),
+            telefono ? String(telefono).trim() : null,
+            pendingRolId,
+          ]
+        );
+        return ins.rows[0];
+      }
+    );
+
+    res.status(201).json({
+      message: 'Solicitud de registro enviada correctamente. Su cuenta se encuentra sujeta a aprobación por un Administrador.',
+      user: newUser,
+    });
+  } catch (err) {
+    console.error('[POST /api/auth/registro Error]:', err);
+    res.status(500).json({ error: 'Error al procesar el registro de usuario.' });
+  }
+});
+
+/**
  * GET /api/auth/me
  * Devuelve el usuario actual validado contra la BD desde la cookie HttpOnly.
  */

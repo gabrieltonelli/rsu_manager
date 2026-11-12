@@ -8,29 +8,34 @@ import React from 'react';
  */
 export default function RsuLogo({
   showText = true,
-  size = 'md', // 'sm' | 'md' | 'lg'
+  size = 'md', // 'sm' | 'md' | 'lg' | 'hero'
   inverted = false, // true para sidebar con fondo oscuro
+  symbolOnly = false, // true para usar solo el isotipo de la 'S' con la hoja
   className = '',
 }) {
   const heightMap = {
     sm: 26,
     md: 34,
     lg: 46,
+    hero: 64,
   };
 
   const textClassMap = {
     sm: 'rsu-logo-text-sm',
     md: 'rsu-logo-text-md',
     lg: 'rsu-logo-text-lg',
+    hero: 'rsu-logo-text-hero',
   };
 
   const imgHeight = heightMap[size] || 34;
+  const imageSrc = symbolOnly ? '/brand/rsu-symbol.png' : '/brand/rsu-logo.png';
+  const altText = symbolOnly ? 'RSU Símbolo' : 'RSU';
 
   return (
     <div className={`rsu-logo-container ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
       <img
-        src="/brand/rsu-logo.png"
-        alt="RSU"
+        src={imageSrc}
+        alt={altText}
         style={{
           height: `${imgHeight}px`,
           width: 'auto',

@@ -1,21 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, LogIn, Container, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  LogIn,
+  ArrowLeft,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  CheckCircle2,
+  AlertCircle,
+  HelpCircle,
+  Clock,
+  Shield,
+  Container,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../api/http';
-import RsuLogo from '../components/RsuLogo';
 
 export function LoginPage() {
-  const { user, login, startGoogleOAuth, registerGooglePending } = useAuth();
+  const { user, login, startGoogleOAuth } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  // Estados de vista: 'login' | 'recuperar' | 'registro'
+  const [activeCard, setActiveCard] = useState('login');
+
+  // Estados para Login
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Estados para Recuperar Contraseña
+  const [recoverEmail, setRecoverEmail] = useState('');
+  const [recoverSent, setRecoverSent] = useState(false);
+
+  // Estados para Registro
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regSuccess, setRegSuccess] = useState(false);
+
+  // Manejo de carga y errores
   const [submitting, setSubmitting] = useState(false);
-  const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState('');
-  const [googleName, setGoogleName] = useState('');
+  const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -26,213 +54,482 @@ export function LoginPage() {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const resetFormState = () => {
     setError('');
+    setInfoMessage('');
+    setSubmitting(false);
+  };
+
+  const handleSwitchCard = (card) => {
+    resetFormState();
+    setActiveCard(card);
+  };
+
+  // 1. Submit Login Email/Password
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    resetFormState();
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(loginEmail, loginPassword);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error al iniciar sesión.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  // 2. Click Login Google
   const handleGoogleClick = async () => {
-    setError('');
+    resetFormState();
     try {
       await startGoogleOAuth();
     } catch (err) {
-      setShowGoogleModal(true);
+      setError(err.message || 'No se pudo iniciar el inicio de sesión con Google.');
     }
   };
 
-  const handleGoogleModalSubmit = async (e) => {
+  // 3. Submit Recuperar Contraseña
+  const handleRecoverSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    resetFormState();
     setSubmitting(true);
     try {
-      await registerGooglePending(googleEmail, googleName);
-      setShowGoogleModal(false);
+      const res = await apiFetch('/auth/recuperar-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: recoverEmail }),
+      });
+      setRecoverSent(true);
+      setInfoMessage(
+        res?.message ||
+          'En caso de existir en el sistema, recibirá un email con instrucciones para restablecer su contraseña.'
+      );
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error al procesar la solicitud de recuperación.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  // 4. Submit Registro
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    resetFormState();
+
+    if (regPassword !== regConfirmPassword) {
+      setError('Las contraseñas ingresadas no coinciden.');
+      return;
+    }
+    if (regPassword.length < 6) {
+      setError('La contraseña debe tener un mínimo de 6 caracteres.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await apiFetch('/auth/registro', {
+        method: 'POST',
+        body: JSON.stringify({
+          nombre_completo: regName,
+          email: regEmail,
+          telefono: regPhone,
+          password: regPassword,
+        }),
+      });
+      setRegSuccess(true);
+      setInfoMessage(
+        res?.message ||
+          'Su solicitud de registro ha sido enviada exitosamente y está sujeta a aprobación de un Administrador.'
+      );
+    } catch (err) {
+      setError(err.message || 'Error al enviar la solicitud de registro.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Accesos rápidos de desarrollo/testing
   const fillDemo = (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
+    setLoginEmail(demoEmail);
+    setLoginPassword(demoPass);
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-header">
-          <div style={{ marginBottom: '14px' }}>
-            <RsuLogo size="lg" />
-          </div>
-          <h1>Gestión de Recolección y Reciclaje</h1>
-          <p>Puntos de recolección, rutas óptimas, volquetes y trazabilidad integral</p>
+        {/* Cabecera limpia y minimalista */}
+        <div className="auth-header-minimal">
+          <img
+            src="/brand/rsu-symbol.png"
+            alt="RSU Símbolo"
+            className="auth-header-symbol"
+          />
+          <h1 className="auth-header-title">Manager</h1>
         </div>
 
         {error && (
-          <div className="alert alert-danger">
+          <div className="alert alert-danger" style={{ marginBottom: '16px' }}>
             <AlertCircle size={18} />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label>Correo Electrónico</label>
-            <input
-              type="email"
-              required
-              placeholder="usuario@rsu.com.ar"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Contraseña</label>
-            <input
-              type="password"
-              required
-              placeholder="••••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary full-width" disabled={submitting}>
-            <LogIn size={18} />
-            <span>{submitting ? 'Verificando credenciales...' : 'Iniciar Sesión con Email'}</span>
-          </button>
-        </form>
-
-        <div className="auth-separator">
-          <span>o ingresar con proveedor externo</span>
-        </div>
-
-        <div className="google-buttons">
-          <button type="button" className="btn btn-outline full-width" onClick={handleGoogleClick}>
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path
-                fill="#EA4335"
-                d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"
-              />
-              <path
-                fill="#4285F4"
-                d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 19.9 7.4 23 12 23z"
-              />
-            </svg>
-            <span>Continuar con cuenta de Google (Supabase OAuth)</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm full-width"
-            onClick={() => setShowGoogleModal(true)}
-          >
-            ¿Primera vez con Google? Solicitar alta de cuenta Google (Estado Pendiente)
-          </button>
-        </div>
-
-        <div className="demo-credentials-box">
-          <div className="demo-title">
-            <Shield size={15} />
-            <span>Accesos rápidos por rol (Datos Semilla en Supabase):</span>
-          </div>
-          <div className="demo-buttons">
-            <button
-              type="button"
-              className="chip-btn"
-              onClick={() => fillDemo('admin@rsu.com.ar', 'AdminRSU2026!')}
-            >
-              Administrador
-            </button>
-            <button
-              type="button"
-              className="chip-btn"
-              onClick={() => fillDemo('recolector1@rsu.com.ar', 'Recolector2026!')}
-            >
-              Recolector (Carlos)
-            </button>
-            <button
-              type="button"
-              className="chip-btn"
-              onClick={() => fillDemo('cliente@ecopack.com.ar', 'Cliente2026!')}
-            >
-              Cliente (EcoPack)
-            </button>
-          </div>
-        </div>
-
-        <div className="public-portal-banner">
-          <Container size={20} />
-          <div>
-            <strong>¿Necesitas pedir o retirar un Volquete?</strong>
-            <p>Accede sin usuario al portal público de gestión por dirección.</p>
-          </div>
-          <Link to="/volquetes/solicitud" className="btn btn-secondary btn-sm">
-            Ir a Volquetes
-          </Link>
-        </div>
-      </div>
-
-      {showGoogleModal && (
-        <div className="modal-backdrop">
-          <div className="modal-card">
-            <h3>Ingreso con Cuenta de Google</h3>
-            <p className="text-muted">
-              Según la política de seguridad del sistema, toda cuenta nueva que ingresa con Google se registra en estado{' '}
-              <strong>Pendiente de Aprobación</strong> hasta que un Administrador la habilite y le asigne su rol.
-            </p>
-            <form onSubmit={handleGoogleModalSubmit} className="auth-form">
+        {/* VISTA 1: CARD DE INICIO DE SESIÓN */}
+        {activeCard === 'login' && (
+          <>
+            <form onSubmit={handleLoginSubmit} className="auth-form">
               <div className="form-group">
-                <label>Correo de Google (@gmail.com / corporativo)</label>
+                <label>Correo Electrónico</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="email"
+                    required
+                    placeholder="usuario@rsu.com.ar"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Contraseña</label>
                 <input
-                  type="email"
+                  type="password"
                   required
-                  placeholder="ejemplo@gmail.com"
-                  value={googleEmail}
-                  onChange={(e) => setGoogleEmail(e.target.value)}
+                  placeholder="••••••••••••"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
                 />
               </div>
-              <div className="form-group">
-                <label>Nombre y Apellido</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Juan Pérez"
-                  value={googleName}
-                  onChange={(e) => setGoogleName(e.target.value)}
-                />
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="btn btn-outline" onClick={() => setShowGoogleModal(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
-                  Continuar con Google
-                </button>
-              </div>
+
+              {/* Botón verde de Email */}
+              <button
+                type="submit"
+                className="btn btn-primary full-width"
+                disabled={submitting}
+                style={{ marginTop: '4px' }}
+              >
+                <LogIn size={18} />
+                <span>{submitting ? 'Verificando...' : 'Iniciar Sesión con Email'}</span>
+              </button>
+
+              {/* Botón azul de Google con icono */}
+              <button
+                type="button"
+                className="btn btn-google-blue full-width"
+                onClick={handleGoogleClick}
+                disabled={submitting}
+                style={{ marginTop: '10px' }}
+              >
+                <span className="google-icon-wrapper">
+                  <svg width="16" height="16" viewBox="0 0 24 24">
+                    <path
+                      fill="#EA4335"
+                      d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"
+                    />
+                    <path
+                      fill="#4285F4"
+                      d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 19.9 7.4 23 12 23z"
+                    />
+                  </svg>
+                </span>
+                <span>Iniciar Sesión con Google</span>
+              </button>
             </form>
+
+            {/* Enlaces inferiores divididos por pipe */}
+            <div className="auth-links-row">
+              <button
+                type="button"
+                className="auth-link-btn"
+                onClick={() => handleSwitchCard('recuperar')}
+              >
+                Recuperar contraseña
+              </button>
+              <span className="auth-pipe-separator">|</span>
+              <button
+                type="button"
+                className="auth-link-btn"
+                onClick={() => handleSwitchCard('registro')}
+              >
+                Registrarse
+              </button>
+            </div>
+
+            {/* Accesos rápidos de desarrollo / demo */}
+            <div className="demo-credentials-box" style={{ marginTop: '20px' }}>
+              <div className="demo-title">
+                <Shield size={14} />
+                <span>Accesos rápidos (Semilla Supabase):</span>
+              </div>
+              <div className="demo-buttons">
+                <button
+                  type="button"
+                  className="chip-btn"
+                  onClick={() => fillDemo('admin@rsu.com.ar', 'AdminRSU2026!')}
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  className="chip-btn"
+                  onClick={() => fillDemo('recolector1@rsu.com.ar', 'Recolector2026!')}
+                >
+                  Recolector
+                </button>
+                <button
+                  type="button"
+                  className="chip-btn"
+                  onClick={() => fillDemo('cliente@ecopack.com.ar', 'Cliente')}
+                >
+                  Cliente
+                </button>
+              </div>
+            </div>
+
+            <div className="public-portal-banner" style={{ marginTop: '14px' }}>
+              <Container size={18} />
+              <div style={{ flex: 1, fontSize: '13px' }}>
+                <strong>¿Solicitud de Volquetes?</strong>
+                <p style={{ margin: 0, fontSize: '12px', color: '#475569' }}>
+                  Acceso público directo por dirección.
+                </p>
+              </div>
+              <Link to="/volquetes/solicitud" className="btn btn-secondary btn-sm">
+                Ir a Volquetes
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* VISTA 2: CARD RECUPERAR CONTRASEÑA */}
+        {activeCard === 'recuperar' && (
+          <div>
+            <div style={{ marginBottom: '16px' }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => handleSwitchCard('login')}
+                style={{ paddingLeft: 0, gap: '6px' }}
+              >
+                <ArrowLeft size={16} />
+                <span>Volver al inicio de sesión</span>
+              </button>
+            </div>
+
+            <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px', color: '#1e293b' }}>
+              Recuperar Contraseña
+            </h2>
+            <p className="text-muted" style={{ fontSize: '13px', marginBottom: '20px', lineHeight: 1.5 }}>
+              Ingrese el correo electrónico registrado en su cuenta. Le enviaremos un enlace con las instrucciones para establecer una nueva clave de acceso.
+            </p>
+
+            {recoverSent ? (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: '#dcfce7',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 14px',
+                    color: '#16a34a',
+                  }}
+                >
+                  <CheckCircle2 size={28} />
+                </div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', color: '#0f172a' }}>
+                  Instrucciones enviadas
+                </h3>
+                <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.5, marginBottom: '20px' }}>
+                  {infoMessage}
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary full-width"
+                  onClick={() => handleSwitchCard('login')}
+                >
+                  Regresar a Iniciar Sesión
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleRecoverSubmit} className="auth-form">
+                <div className="form-group">
+                  <label>Correo Electrónico</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="usuario@rsu.com.ar"
+                    value={recoverEmail}
+                    onChange={(e) => setRecoverEmail(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary full-width"
+                  disabled={submitting}
+                  style={{ marginTop: '10px' }}
+                >
+                  <Mail size={16} />
+                  <span>{submitting ? 'Procesando...' : 'Enviar instrucciones de recuperación'}</span>
+                </button>
+              </form>
+            )}
           </div>
-        </div>
-      )}
+        )}
+
+        {/* VISTA 3: CARD REGISTRARSE (SUJETO A APROBACIÓN) */}
+        {activeCard === 'registro' && (
+          <div>
+            <div style={{ marginBottom: '16px' }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => handleSwitchCard('login')}
+                style={{ paddingLeft: 0, gap: '6px' }}
+              >
+                <ArrowLeft size={16} />
+                <span>Volver al inicio de sesión</span>
+              </button>
+            </div>
+
+            <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+              Solicitud de Registro
+            </h2>
+
+            {/* Advertencia destacada de Aprobación */}
+            <div
+              style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '18px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px',
+              }}
+            >
+              <Clock size={18} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
+              <div style={{ fontSize: '12px', color: '#92400e', lineHeight: 1.45 }}>
+                <strong>Aviso de Seguridad:</strong> Las cuentas nuevas quedan registradas en estado{' '}
+                <em>Pendiente de Aprobación</em>. Un Administrador revisará su perfil y le asignará el rol correspondiente antes de permitir el acceso a las funciones operativas.
+              </div>
+            </div>
+
+            {regSuccess ? (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: '#fef3c7',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 14px',
+                    color: '#d97706',
+                  }}
+                >
+                  <CheckCircle2 size={28} />
+                </div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', color: '#0f172a' }}>
+                  Solicitud Registrada
+                </h3>
+                <p style={{ fontSize: '13px', color: '#475569', lineHeight: 1.5, marginBottom: '20px' }}>
+                  {infoMessage}
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary full-width"
+                  onClick={() => handleSwitchCard('login')}
+                >
+                  Ir al Inicio de Sesión
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleRegisterSubmit} className="auth-form">
+                <div className="form-group">
+                  <label>Nombre y Apellido</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Juan Pérez"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Correo Electrónico</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="ejemplo@rsu.com.ar"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Teléfono de Contacto (Opcional)</label>
+                  <input
+                    type="tel"
+                    placeholder="+54 9 11 ..."
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Contraseña</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Mínimo 6 caracteres"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Confirmar Contraseña</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Repita su contraseña"
+                    value={regConfirmPassword}
+                    onChange={(e) => setRegConfirmPassword(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary full-width"
+                  disabled={submitting}
+                  style={{ marginTop: '10px' }}
+                >
+                  <User size={16} />
+                  <span>{submitting ? 'Enviando solicitud...' : 'Enviar Solicitud de Registro'}</span>
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -326,4 +623,3 @@ export function PendingApprovalPage() {
     </div>
   );
 }
-
