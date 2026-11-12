@@ -1,0 +1,6 @@
+# Pendientes
+
+## MVP
+
+- Agrega lo necesario para que sea una PWA que se pueda instalar en iphone y android como así tambien en desktop.
+- 
