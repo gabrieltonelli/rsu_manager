@@ -1,9 +1,11 @@
 # Configuración de Despliegue Monolítico en Netlify (Client React/Vite + Server Express Serverless)
 [build]
-  base = "/"
-  command = "cd server && npm install && cd ../client && npm install && npm run build"
+  command = "npm --prefix server install && npm --prefix client install && npm --prefix client run build"
   publish = "client/dist"
   functions = "server/netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
 
 [functions]
   node_bundler = "esbuild"
@@ -21,4 +23,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
