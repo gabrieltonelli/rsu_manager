@@ -1,0 +1,34 @@
+# Dependencias (cada subproyecto maneja su propio node_modules)
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Variables de entorno reales (nunca subir al repositorio)
+.env
+.env.*
+!.env.template
+client/.env
+client/.env.*
+!client/.env.template
+server/.env
+server/.env.*
+!server/.env.template
+
+# Builds y salidas
+client/dist/
+server/dist/
+.netlify/
+
+# Logs y archivos temporales
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bridge.log
+
+# Sistema Operativo / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
