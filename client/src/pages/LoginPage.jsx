@@ -148,12 +148,6 @@ export function LoginPage() {
     }
   };
 
-  // Accesos rápidos de desarrollo/testing
-  const fillDemo = (demoEmail, demoPass) => {
-    setLoginEmail(demoEmail);
-    setLoginPassword(demoPass);
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -262,50 +256,6 @@ export function LoginPage() {
               >
                 Registrarse
               </button>
-            </div>
-
-            {/* Accesos rápidos de desarrollo / demo */}
-            <div className="demo-credentials-box" style={{ marginTop: '20px' }}>
-              <div className="demo-title">
-                <Shield size={14} />
-                <span>Accesos rápidos (Semilla Supabase):</span>
-              </div>
-              <div className="demo-buttons">
-                <button
-                  type="button"
-                  className="chip-btn"
-                  onClick={() => fillDemo('admin@rsu.com.ar', 'AdminRSU2026!')}
-                >
-                  Admin
-                </button>
-                <button
-                  type="button"
-                  className="chip-btn"
-                  onClick={() => fillDemo('recolector1@rsu.com.ar', 'Recolector2026!')}
-                >
-                  Recolector
-                </button>
-                <button
-                  type="button"
-                  className="chip-btn"
-                  onClick={() => fillDemo('cliente@ecopack.com.ar', 'Cliente')}
-                >
-                  Cliente
-                </button>
-              </div>
-            </div>
-
-            <div className="public-portal-banner" style={{ marginTop: '14px' }}>
-              <Container size={18} />
-              <div style={{ flex: 1, fontSize: '13px' }}>
-                <strong>¿Solicitud de Volquetes?</strong>
-                <p style={{ margin: 0, fontSize: '12px', color: '#475569' }}>
-                  Acceso público directo por dirección.
-                </p>
-              </div>
-              <Link to="/volquetes/solicitud" className="btn btn-secondary btn-sm">
-                Ir a Volquetes
-              </Link>
             </div>
           </>
         )}
