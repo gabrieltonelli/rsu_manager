@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToWebPush } from '../api/http';
+import RsuLogo from './RsuLogo';
 
 export default function AppLayout({ children }) {
   const { user, logout } = useAuth();
@@ -79,11 +80,7 @@ export default function AppLayout({ children }) {
     <div className="app-shell">
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <div className="brand-logo">RSU</div>
-          <div>
-            <div className="brand-title">RSU Manager</div>
-            <div className="brand-subtitle">Inquilino: {user?.inquilino_codigo || 'RSU'}</div>
-          </div>
+          <RsuLogo size="md" inverted={true} />
           <button className="mobile-close-btn" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
           </button>

@@ -54,11 +54,30 @@ h1, h2, h3, h4 {
 }
 
 .sidebar-brand {
-  padding: 20px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rsu-logo-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rsu-logo-text-sm {
+  font-size: 15px;
+}
+
+.rsu-logo-text-md {
+  font-size: 19px;
+}
+
+.rsu-logo-text-lg {
+  font-size: 26px;
 }
 
 .brand-logo {

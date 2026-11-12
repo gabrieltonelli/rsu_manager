@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Shield, LogIn, Container, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../api/http';
+import RsuLogo from '../components/RsuLogo';
 
 export function LoginPage() {
   const { user, login, startGoogleOAuth, registerGooglePending } = useAuth();
@@ -70,7 +71,9 @@ export function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-header">
-          <div className="brand-logo large">RSU</div>
+          <div style={{ marginBottom: '14px' }}>
+            <RsuLogo size="lg" />
+          </div>
           <h1>Gestión de Recolección y Reciclaje</h1>
           <p>Puntos de recolección, rutas óptimas, volquetes y trazabilidad integral</p>
         </div>
