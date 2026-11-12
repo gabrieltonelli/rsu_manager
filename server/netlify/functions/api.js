@@ -16,16 +16,17 @@ module.exports.handler = async (event, context) => {
   }
 
   try {
-    return await serverlessHandler(event, context);
+    const response = await serverlessHandler(event, context);
+    return response;
   } catch (error) {
-    console.error('[Netlify Function Crash]:', error);
+    console.error('[Netlify Function Handler Error]:', error);
     return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        error: error.message || 'Error interno en Netlify Function',
+        error: error.message || 'Error interno en la ejecución de la función.',
       }),
     };
   }
