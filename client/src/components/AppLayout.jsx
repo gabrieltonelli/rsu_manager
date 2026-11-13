@@ -153,11 +153,10 @@ export default function AppLayout({ children }) {
 
       {/* Drawer / Sidebar Lateral */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        {/* Cabecera del Drawer con el logo completo integrado sobre fondo oscuro */}
+        {/* Cabecera del Drawer con el logo limpio sin versión al lado */}
         <div className="sidebar-brand">
           <div className="sidebar-brand-content">
             <RsuLogo size="sm" showText={true} inverted={true} />
-            <span className="version-pill inverted">v{pkg.version}</span>
           </div>
           <button
             className="mobile-close-btn"
@@ -184,13 +183,18 @@ export default function AppLayout({ children }) {
             );
           })}
         </nav>
+
+        {/* Footer del Drawer: versión limpia y discreta */}
+        <div className="sidebar-footer">
+          <span className="sidebar-version-tag">Versión v{pkg.version}</span>
+        </div>
       </aside>
 
       {/* Área Principal */}
       <div className="main-area">
         <header className="topbar">
           <div className="topbar-left">
-            {/* Botón hamburguesa en mobile */}
+            {/* Botón hamburguesa solo visible en Mobile */}
             <button
               className="mobile-menu-btn"
               onClick={() => setSidebarOpen(true)}
@@ -200,22 +204,11 @@ export default function AppLayout({ children }) {
               <Menu size={22} />
             </button>
 
-            {/* Versión Desktop del Header: Logo completo + píldora de versión */}
-            <div className="topbar-desktop-brand">
-              <Link to="/" className="topbar-brand-link">
-                <RsuLogo size="md" showText={true} />
-              </Link>
-              <span className="version-pill" title={`Versión: ${pkg.version}`}>
-                v{pkg.version}
-              </span>
-            </div>
-
-            {/* Versión Mobile del Header: Isotipo 'S' con hoja + Manager compacto para optimizar espacio */}
+            {/* Logo solo en Mobile (en Desktop la marca ya reside en la barra lateral fija) */}
             <div className="topbar-mobile-brand">
               <Link to="/" className="topbar-brand-link">
                 <RsuLogo size="sm" showText={true} />
               </Link>
-              <span className="version-pill">v{pkg.version}</span>
             </div>
           </div>
 
