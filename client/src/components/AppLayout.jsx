@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -14,20 +14,74 @@ import {
   LogOut,
   Menu,
   X,
-  ExternalLink,
   Navigation,
+  ChevronDown,
+  User as UserIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToWebPush } from '../api/http';
 import RsuLogo from './RsuLogo';
+import pkg from '../../package.json';
 
 export default function AppLayout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [pushStatus, setPushStatus] = useState('');
+  const avatarDropdownRef = useRef(null);
+
+  // Bloquear el scroll del fondo cuando el drawer o un modal estén abiertos
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [sidebarOpen]);
+
+  // Listener para cerrar el dropdown al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target)) {
+        setAvatarMenuOpen(false);
+      }
+    }
+
+    if (avatarMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [avatarMenuOpen]);
+
+  // Observer global para congelar el scroll del body ante modales abiertos (.modal-backdrop)
+  useEffect(() => {
+    const checkModals = () => {
+      const modalOpen = Boolean(document.querySelector('.modal-backdrop'));
+      if (modalOpen && !sidebarOpen) {
+        document.body.style.overflow = 'hidden';
+      } else if (!sidebarOpen) {
+        document.body.style.overflow = '';
+      }
+    };
+
+    const observer = new MutationObserver(checkModals);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, [sidebarOpen]);
 
   const handleLogout = async () => {
+    setAvatarMenuOpen(false);
     await logout();
     navigate('/login');
   };
@@ -76,12 +130,37 @@ export default function AppLayout({ children }) {
       : []),
   ];
 
+  // Obtener iniciales para el avatar
+  const initials = user?.nombre_completo
+    ? user.nombre_completo
+        .split(' ')
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'U';
+
   return (
     <div className="app-shell">
+      {/* Fondo oscurecido para mobile que previene eventos y scroll */}
+      {sidebarOpen && (
+        <div
+          className="drawer-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          onTouchMove={(e) => e.preventDefault()}
+          onWheel={(e) => e.preventDefault()}
+        />
+      )}
+
+      {/* Drawer / Sidebar Lateral */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <RsuLogo size="md" inverted={true} />
-          <button className="mobile-close-btn" onClick={() => setSidebarOpen(false)}>
+          <span className="sidebar-brand-title">Menú de Navegación</span>
+          <button
+            className="mobile-close-btn"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Cerrar menú"
+          >
             <X size={20} />
           </button>
         </div>
@@ -101,47 +180,78 @@ export default function AppLayout({ children }) {
               </NavLink>
             );
           })}
-
-          <div className="nav-divider" />
-          <NavLink
-            to="/volquetes/solicitud"
-            onClick={() => setSidebarOpen(false)}
-            className="nav-link public-link"
-          >
-            <ExternalLink size={18} />
-            <span>Portal Público Volquetes</span>
-          </NavLink>
         </nav>
-
-        <div className="sidebar-footer">
-          <div className="user-summary">
-            <div className="user-name">{user?.nombre_completo}</div>
-            <div className="user-email">{user?.email}</div>
-            <span className={`role-badge role-${rol}`}>{user?.rol_nombre}</span>
-          </div>
-          <button className="btn btn-outline btn-sm full-width" onClick={handleLogout}>
-            <LogOut size={16} />
-            <span>Cerrar Sesión</span>
-          </button>
-        </div>
       </aside>
 
+      {/* Área Principal */}
       <div className="main-area">
         <header className="topbar">
-          <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)}>
-            <Menu size={22} />
-          </button>
           <div className="topbar-left">
-            <span className="security-pill">
-              🔒 Sesión Cookie HttpOnly · RBAC en Tiempo Real
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Abrir menú"
+              style={{ marginRight: '4px' }}
+            >
+              <Menu size={22} />
+            </button>
+
+            {/* Logo de la aplicación ahora ubicado en el Header */}
+            <RsuLogo size="sm" showText={true} />
+
+            {/* Versión extraída dinámicamente de client/package.json */}
+            <span className="version-pill" title={`Versión de la app: ${pkg.version}`}>
+              v{pkg.version}
             </span>
           </div>
+
           <div className="topbar-right">
             {pushStatus && <span className="push-toast">{pushStatus}</span>}
-            <button className="btn btn-secondary btn-sm" onClick={handleEnablePush} title="Activar y probar notificaciones Web Push">
-              <Bell size={16} />
-              <span>Notificaciones Push</span>
-            </button>
+
+            {/* Menú desplegable del Avatar del Usuario */}
+            <div className="user-menu-container" ref={avatarDropdownRef}>
+              <button
+                type="button"
+                className={`avatar-btn ${avatarMenuOpen ? 'active' : ''}`}
+                onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
+                aria-label="Menú de usuario"
+              >
+                <div className="avatar-circle">{initials}</div>
+                <ChevronDown size={14} style={{ color: '#64748b' }} />
+              </button>
+
+              {avatarMenuOpen && (
+                <div className="avatar-dropdown">
+                  <div className="dropdown-user-header">
+                    <div className="dropdown-user-name">{user?.nombre_completo}</div>
+                    <div className="dropdown-user-email">{user?.email}</div>
+                    <span className={`role-badge role-${rol}`}>{user?.rol_nombre}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="dropdown-item"
+                    onClick={() => {
+                      setAvatarMenuOpen(false);
+                      handleEnablePush();
+                    }}
+                    title="Activar notificaciones Web Push"
+                  >
+                    <Bell size={16} />
+                    <span>Notificaciones Push</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="dropdown-item logout"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={16} />
+                    <span>Cerrar Sesión</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -150,4 +260,3 @@ export default function AppLayout({ children }) {
     </div>
   );
 }
-

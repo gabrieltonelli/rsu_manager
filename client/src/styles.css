@@ -72,6 +72,14 @@ h1, h2, h3, h4 {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.sidebar-brand-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
 .rsu-logo-container {
   display: inline-flex;
   align-items: center;
@@ -297,6 +305,138 @@ h1, h2, h3, h4 {
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.version-pill {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: text;
+}
+
+.user-menu-container {
+  position: relative;
+}
+
+.avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.avatar-btn:hover,
+.avatar-btn.active {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #059669;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  z-index: 1000;
+  animation: fadeInDropdown 0.15s ease;
+}
+
+@keyframes fadeInDropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-user-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 6px;
+}
+
+.dropdown-user-name {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.dropdown-user-email {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
+
+.dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.dropdown-item.logout {
+  color: #dc2626;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.dropdown-item.logout:hover {
+  background: #fef2f2;
 }
 
 .topbar-right {
@@ -690,6 +830,22 @@ select {
   color: #166534;
 }
 
+/* Drawer Overlay para mobile */
+.drawer-backdrop {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    z-index: 1400;
+    overscroll-behavior: contain;
+  }
+}
+
 /* Modales */
 .modal-backdrop {
   position: fixed;
@@ -700,6 +856,7 @@ select {
   justify-content: center;
   padding: 20px;
   z-index: 2000;
+  overscroll-behavior: contain;
 }
 
 .modal-card {
