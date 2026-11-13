@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import {
   Users,
   Recycle,
@@ -16,7 +16,6 @@ import {
   X,
   Navigation,
   ChevronDown,
-  User as UserIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { subscribeToWebPush } from '../api/http';
@@ -31,7 +30,7 @@ export default function AppLayout({ children }) {
   const [pushStatus, setPushStatus] = useState('');
   const avatarDropdownRef = useRef(null);
 
-  // Bloquear el scroll del fondo cuando el drawer o un modal estén abiertos
+  // Bloquear el scroll del fondo cuando el drawer esté abierto
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -47,7 +46,7 @@ export default function AppLayout({ children }) {
     };
   }, [sidebarOpen]);
 
-  // Listener para cerrar el dropdown al hacer clic fuera
+  // Listener para cerrar el dropdown del avatar al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event) {
       if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target)) {
@@ -130,7 +129,7 @@ export default function AppLayout({ children }) {
       : []),
   ];
 
-  // Obtener iniciales para el avatar
+  // Iniciales para el avatar
   const initials = user?.nombre_completo
     ? user.nombre_completo
         .split(' ')
@@ -154,8 +153,12 @@ export default function AppLayout({ children }) {
 
       {/* Drawer / Sidebar Lateral */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        {/* Cabecera del Drawer con el logo completo integrado sobre fondo oscuro */}
         <div className="sidebar-brand">
-          <span className="sidebar-brand-title">Menú de Navegación</span>
+          <div className="sidebar-brand-content">
+            <RsuLogo size="sm" showText={true} inverted={true} />
+            <span className="version-pill inverted">v{pkg.version}</span>
+          </div>
           <button
             className="mobile-close-btn"
             onClick={() => setSidebarOpen(false)}
@@ -187,22 +190,33 @@ export default function AppLayout({ children }) {
       <div className="main-area">
         <header className="topbar">
           <div className="topbar-left">
+            {/* Botón hamburguesa en mobile */}
             <button
               className="mobile-menu-btn"
               onClick={() => setSidebarOpen(true)}
               aria-label="Abrir menú"
-              style={{ marginRight: '4px' }}
+              style={{ marginRight: '6px' }}
             >
               <Menu size={22} />
             </button>
 
-            {/* Logo de la aplicación ahora ubicado en el Header */}
-            <RsuLogo size="sm" showText={true} />
+            {/* Versión Desktop del Header: Logo completo + píldora de versión */}
+            <div className="topbar-desktop-brand">
+              <Link to="/" className="topbar-brand-link">
+                <RsuLogo size="md" showText={true} />
+              </Link>
+              <span className="version-pill" title={`Versión: ${pkg.version}`}>
+                v{pkg.version}
+              </span>
+            </div>
 
-            {/* Versión extraída dinámicamente de client/package.json */}
-            <span className="version-pill" title={`Versión de la app: ${pkg.version}`}>
-              v{pkg.version}
-            </span>
+            {/* Versión Mobile del Header: Isotipo 'S' con hoja + Manager compacto para optimizar espacio */}
+            <div className="topbar-mobile-brand">
+              <Link to="/" className="topbar-brand-link">
+                <RsuLogo size="sm" showText={true} />
+              </Link>
+              <span className="version-pill">v{pkg.version}</span>
+            </div>
           </div>
 
           <div className="topbar-right">

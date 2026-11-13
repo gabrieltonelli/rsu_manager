@@ -64,20 +64,26 @@ h1, h2, h3, h4 {
 }
 
 .sidebar-brand {
-  padding: 16px 20px;
+  height: 64px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
-.sidebar-brand-title {
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
+.sidebar-brand-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.version-pill.inverted {
+  background: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .rsu-logo-container {
@@ -288,29 +294,56 @@ h1, h2, h3, h4 {
 }
 
 .topbar {
-  height: 62px;
+  height: 64px;
   background: #fff;
   border-bottom: 1px solid var(--border);
-  padding: 0 24px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.security-pill {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+.topbar-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topbar-brand-link:hover {
+  opacity: 0.92;
+}
+
+.topbar-desktop-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-mobile-brand {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .topbar-desktop-brand {
+    display: none;
+  }
+
+  .topbar-mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 .version-pill {
@@ -1460,6 +1493,10 @@ select {
 }
 
 @media (max-width: 960px) {
+  .topbar {
+    padding: 0 14px;
+  }
+
   .two-col-layout,
   .grid-form,
   .action-radio-grid {
@@ -1471,12 +1508,14 @@ select {
     left: -280px;
     top: 0;
     bottom: 0;
+    width: 280px;
     z-index: 1500;
-    transition: left 0.2s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar.open {
-    left: 0;
+    transform: translateX(280px);
   }
 
   .mobile-menu-btn,
