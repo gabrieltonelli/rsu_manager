@@ -80,6 +80,18 @@ h1, h2, h3, h4 {
   gap: 8px;
 }
 
+.sidebar-brand .rsu-logo-text {
+  padding-top: 4px !important;
+  font-size: 20px !important;
+  font-weight: 300 !important;
+}
+
+.topbar-mobile-brand .rsu-logo-text {
+  padding-top: 4px !important;
+  font-size: 21px !important;
+  font-weight: 400 !important;
+}
+
 .version-pill.inverted {
   background: rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
